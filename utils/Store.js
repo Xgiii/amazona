@@ -23,7 +23,7 @@ function reducer(state, action) {
           )
         : [...state.cart.cartItems, newItem];
 
-        Cookies.set('cart', JSON.stringify({ ...state.cart, cartItems }));
+      Cookies.set('cart', JSON.stringify({ ...state.cart, cartItems }));
       return { ...state, cart: { ...state.cart, cartItems } };
     }
     case 'CART_REMOVE_ITEM': {
@@ -31,9 +31,18 @@ function reducer(state, action) {
         (item) => item.slug !== action.payload.slug
       );
 
-      Cookies.set('cart', { ...state.cart, cartItems });
+      Cookies.set('cart', JSON.stringify({ ...state.cart, cartItems }));
       return { ...state, cart: { ...state.cart, cartItems } };
     }
+    case 'CART_RESET':
+      return {
+        ...state,
+        cart: {
+          cartItems: [],
+          shippingAddress: { location: {} },
+          paymentMethod: '',
+        },
+      };
     default:
       return state;
   }
