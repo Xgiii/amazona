@@ -62,14 +62,12 @@ function OrderHistoryScreen() {
                 <tr key={order._id} className='border-b'>
                   <td className='p-5'>{order._id.substring(20, 24)}</td>
                   <td className='p-5'>
-                    {new Intl.DateTimeFormat('pl-PL')
-                      .format(order.createdAt)
-                      .substring(0, 10)}
+                    {order.createdAt.substring(0, 10)}
                   </td>
                   <td className='p-5'>${order.totalPrice}</td>
                   <td className='p-5'>
                     {order.isPaid
-                      ? `${new Intl.DateTimeFormat('pl-PL')
+                      ? `${new Intl.DateTimeFormat('en-US')
                           .format(order.paidAt)
                           .substring(0, 10)}`
                       : 'not paid'}

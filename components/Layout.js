@@ -6,7 +6,6 @@ import { ToastContainer } from 'react-toastify';
 import { Menu } from '@headlessui/react';
 import 'react-toastify/dist/ReactToastify.css';
 import { signOut, useSession } from 'next-auth/react';
-import DropdownLink from './DropdownLink';
 import Cookies from 'js-cookie';
 
 function Layout({ title, children }) {
@@ -21,8 +20,8 @@ function Layout({ title, children }) {
   }, [cart.cartItems]);
 
   function logoutClickHandler() {
-    Cookies.remove('cart')
-    dispatch({type: 'CART_RESET'})
+    Cookies.remove('cart');
+    dispatch({ type: 'CART_RESET' });
     signOut({ callbackUrl: '/login' });
   }
 
@@ -34,7 +33,12 @@ function Layout({ title, children }) {
         <link rel='icon' href='/favicon.ico' />
       </Head>
 
-      <ToastContainer position='bottom-center' limit={1} />
+      <ToastContainer
+        position='bottom-center'
+        limit={1}
+        newestOnTop={true}
+        enableMultiContainer={true}
+      />
 
       <div className='flex min-h-screen flex-col justify-between'>
         <header>
@@ -62,27 +66,28 @@ function Layout({ title, children }) {
                     {session.user.name}
                   </Menu.Button>
                   <Menu.Items className='absolute right-0 w-56 origin-top-right bg-white shadow-lg'>
-                    <Menu.Item>
-                      <DropdownLink className='dropdown-link' href='/profile'>
-                        Profile
-                      </DropdownLink>
+                    <Menu.Item as='a' className='dropdown-link' href='/profile'>
+                      Profile
                     </Menu.Item>
-                    <Menu.Item>
-                      <DropdownLink
-                        className='dropdown-link'
-                        href='/order-history'
-                      >
-                        Order History
-                      </DropdownLink>
+                    <Menu.Item
+                      as='a'
+                      className='dropdown-link'
+                      href='/order-history'
+                    >
+                      Order History
                     </Menu.Item>
-                    <Menu.Item>
-                      <DropdownLink
-                        className='dropdown-link'
-                        href='#'
-                        onClick={logoutClickHandler}
-                      >
-                        Logout
-                      </DropdownLink>
+                    {session.user.isAdmin && (
+                      <Menu.Item as='a' className='dropdown-link' href='/admin/dashboard'>
+                        Admin Dashboard
+                      </Menu.Item>
+                    )}
+                    <Menu.Item
+                      as='a'
+                      className='dropdown-link'
+                      href='#'
+                      onClick={logoutClickHandler}
+                    >
+                      Logout
                     </Menu.Item>
                   </Menu.Items>
                 </Menu>

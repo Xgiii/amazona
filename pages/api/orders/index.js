@@ -1,3 +1,4 @@
+import { ObjectId } from 'mongodb';
 import { getSession } from 'next-auth/react';
 import { connectToDb } from '../../../utils/db';
 
@@ -13,8 +14,8 @@ async function handler(req, res) {
 
   const newOrder = {
     ...req.body,
-    user: user._id,
-    createdAt: Date.now(),
+    user: ObjectId(user._id),
+    createdAt: new Intl.DateTimeFormat('en-US').format(Date.now()),
   };
 
   await ordersCollection.insertOne(newOrder);

@@ -1,5 +1,6 @@
 import { PayPalButtons, usePayPalScriptReducer } from '@paypal/react-paypal-js';
 import axios from 'axios';
+import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -24,6 +25,18 @@ function reducer(state, action) {
       return { ...state, loadingPay: false, errorPay: action.payload };
     case 'PAY_RESET':
       return { ...state, loadingPay: false, successPay: false, errorPay: '' };
+    case 'DELIVER_REQUEST':
+      return { ...state, loadingDeliver: true };
+    case 'DELIVER_SUCCESS':
+      return { ...state, loadingDeliver: false, successDeliver: true };
+    case 'DELIVER_FAIL':
+      return { ...state, loadingDeliver: false };
+    case 'DELIVER_RESET':
+      return {
+        ...state,
+        loadingDeliver: false,
+        successDeliver: false,
+      };
     default:
       state;
   }
@@ -31,16 +44,27 @@ function reducer(state, action) {
 
 function OrderScreen() {
   const [{ isPending }, paypalDispatch] = usePayPalScriptReducer();
+  const { data: session } = useSession();
 
   const router = useRouter();
   const orderId = router.query.id;
 
-  const [{ loading, error, order, successPay, loadingPay }, dispatch] =
-    useReducer(reducer, {
-      loading: true,
-      order: {},
-      error: '',
-    });
+  const [
+    {
+      loading,
+      error,
+      order,
+      successPay,
+      loadingPay,
+      loadingDeliver,
+      successDeliver,
+    },
+    dispatch,
+  ] = useReducer(reducer, {
+    loading: true,
+    order: {},
+    error: '',
+  });
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -52,7 +76,12 @@ function OrderScreen() {
         dispatch({ type: 'FETCH_FAIL', payload: getError(err) });
       }
     };
-    if (!order._id || successPay || (order._id && order._id !== orderId)) {
+    if (
+      !order._id ||
+      successPay ||
+      successDeliver ||
+      (order._id && order._id !== orderId)
+    ) {
       fetchOrder();
       if (successPay) {
         dispatch({ type: 'PAY_RESET' });
@@ -72,7 +101,7 @@ function OrderScreen() {
 
       loadPaypalScript();
     }
-  }, [order._id, orderId, paypalDispatch, successPay]);
+  }, [order._id, orderId, paypalDispatch, successPay, successDeliver]);
 
   const {
     shippingAddress,
@@ -123,6 +152,21 @@ function OrderScreen() {
     toast.error(getError(err));
   }
 
+  async function deliverOrderHandler() {
+    try {
+      dispatch({ type: 'DELIVER_REQUEST' });
+      const { data } = await axios.put(
+        `/api/admin/orders/${order._id}/deliver`,
+        {}
+      );
+      dispatch({ type: 'DELIVER_SUCCESS', payload: data });
+      toast.success('Order is delivered');
+    } catch (err) {
+      dispatch({ type: 'DELIVER_FAIL', payload: getError(err) });
+      toast.error(getError(err));
+    }
+  }
+
   return (
     <Layout title={`Order ${orderId}`}>
       <h1 className='mb-4 text-xl'>{`Order ${orderId}`}</h1>
@@ -141,7 +185,12 @@ function OrderScreen() {
                 {shippingAddress.country}
               </div>
               {isDelivered ? (
-                <div className='alert-success'>Delivered at {deliveredAt}</div>
+                <div className='alert-success'>
+                  Delivered at{' '}
+                  {new Intl.DateTimeFormat('en-US')
+                    .format(deliveredAt)
+                    .substring(0, 10)}
+                </div>
               ) : (
                 <div className='alert-error'>Not delivered</div>
               )}
@@ -152,8 +201,7 @@ function OrderScreen() {
               <div>{paymentMethod}</div>
               {isPaid ? (
                 <div className='alert-success'>
-                  Paid at{' '}
-                  {new Intl.DateTimeFormat('en-US').format(paidAt)}
+                  Paid at {new Intl.DateTimeFormat('en-US').format(paidAt)}
                 </div>
               ) : (
                 <div className='alert-error'>Not paid</div>
@@ -241,6 +289,17 @@ function OrderScreen() {
                       </div>
                     )}
                     {loadingPay && <div>Loading...</div>}
+                  </li>
+                )}
+                {session.user.isAdmin && order.isPaid && !order.isDelivered && (
+                  <li>
+                    {loadingDeliver && <div>Loading...</div>}
+                    <button
+                      className='primary-button w-full'
+                      onClick={deliverOrderHandler}
+                    >
+                      Deliver Order
+                    </button>
                   </li>
                 )}
               </ul>
