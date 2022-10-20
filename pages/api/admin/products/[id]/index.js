@@ -13,10 +13,33 @@ const handler = async (req, res) => {
     return getHandler(req, res, user);
   } else if (req.method === 'PUT') {
     return putHandler(req, res, user);
+  } else if (req.method === 'DELETE') {
+    return deleteHandler(req, res, user);
   } else {
     return res.status(400).send({ message: 'Method not allowed' });
   }
 };
+
+const deleteHandler = async (req, res) => {
+  const client = await connectToDb();
+  const product = await client
+    .db()
+    .collection('products')
+    .findOne({ _id: ObjectId(req.query.id) });
+
+  if (product) {
+    await client
+      .db()
+      .collection('products')
+      .deleteOne({ _id: ObjectId(req.query.id) });
+    client.close();
+    res.send({ message: 'Product deleted successfully' });
+  } else {
+    client.close();
+    res.status(404).send({ message: 'Product not found' });
+  }
+};
+
 const getHandler = async (req, res) => {
   const client = await connectToDb();
   const product = await client
@@ -26,6 +49,7 @@ const getHandler = async (req, res) => {
   client.close();
   res.send(product);
 };
+
 const putHandler = async (req, res) => {
   const client = await connectToDb();
   const productsCollection = client.db().collection('products');
