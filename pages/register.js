@@ -1,23 +1,13 @@
 import Link from 'next/link';
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import Layout from '../components/Layout';
-import { signIn, useSession } from 'next-auth/react';
-import { getError } from '../utils/error';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/router';
+import axios from 'axios';
 
-function LoginScreen() {
-  const { data: session } = useSession();
-
+function RegisterScreen() {
   const router = useRouter();
-  const { redirect } = router.query;
-
-  useEffect(() => {
-    if (session?.user) {
-      router.push(redirect || '/');
-    }
-  }, [router, session, redirect]);
 
   const {
     handleSubmit,
@@ -25,18 +15,17 @@ function LoginScreen() {
     formState: { errors },
   } = useForm();
 
-  async function submitHandler({ email, password }) {
+  async function submitHandler({ email, password, name }) {
     try {
-      const result = await signIn('credentials', {
-        redirect: false,
+      const { data } = await axios.post('/api/auth/register', {
+        name,
         email,
         password,
       });
-      if (result.error) {
-        toast.error(result.error);
-      }
+      toast.success(data);
+      router.push('/login');
     } catch (err) {
-      toast.error(getError(err));
+      toast.error(err.message);
     }
   }
 
@@ -48,6 +37,21 @@ function LoginScreen() {
       >
         <h1 className='mb-4 text-xl'>Login</h1>
         <div className='mb-4'>
+          <label htmlFor='name'>Name</label>
+          <input
+            type='text'
+            {...register('name', {
+              required: 'Please enter name',
+            })}
+            id='name'
+            className='w-full'
+            autoFocus
+          />
+          {errors.name && (
+            <div className='text-red-500'>{errors.name.message}</div>
+          )}
+        </div>
+        <div>
           <label htmlFor='email'>Email</label>
           <input
             type='email'
@@ -60,7 +64,6 @@ function LoginScreen() {
             })}
             id='email'
             className='w-full'
-            autoFocus
           />
           {errors.email && (
             <div className='text-red-500'>{errors.email.message}</div>
@@ -82,15 +85,15 @@ function LoginScreen() {
           )}
         </div>
         <div className='mb-4'>
-          <button className='primary-button'>Login</button>
+          <button className='primary-button'>Register</button>
         </div>
         <div className='mb-4'>
-          Don&apos;t have an account? &nbsp;
-          <Link href='/register'>Register</Link>
+          Already have an account? &nbsp;
+          <Link href='/login'>Login</Link>
         </div>
       </form>
     </Layout>
   );
 }
 
-export default LoginScreen;
+export default RegisterScreen;
