@@ -63,7 +63,7 @@ const putHandler = async (req, res) => {
         $set: {
           name: req.body.name,
           slug: req.body.slug,
-          price: req.body.price,
+          price: +req.body.price,
           category: req.body.category,
           image: req.body.image,
           brand: req.body.brand,
