@@ -1,7 +1,6 @@
 import axios from 'axios';
 import { useContext } from 'react';
 import { toast } from 'react-toastify';
-import Filters from '../components/Filters';
 import Layout from '../components/Layout';
 import ProductItem from '../components/ProductItem';
 import { connectToDb, convertDocToObj } from '../utils/db';
@@ -61,10 +60,8 @@ export default function Home({ products }) {
         </Menu.Items>
       </Menu>
       <div className='grid gap-6 md:gap-12 grid-cols-1 md:grid-cols-4 p-4'>
-        <div className='col-span-4 md:col-span-1 p-4 card'>
-          <Filters />
-        </div>
-        <div className='grid gap-4 col-span-4 md:col-span-3 grid-cols-1 md:grid-cols-3'>
+       
+        <div className='grid gap-4 col-span-4 md:col-span-6 grid-cols-1 md:grid-cols-3'>
           {products.map((product) => (
             <ProductItem
               key={product.slug}
